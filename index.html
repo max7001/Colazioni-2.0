@@ -1485,26 +1485,7 @@
 
     // --- INITIALIZATION ---
     document.addEventListener("DOMContentLoaded", async () => {
-      loadState();
-      translateUI();
-      normalizeCitiesData();
-      applyTheme();
-      initFirebase();
-      initEventListeners();
-      initLocks();
-      updateHeaderSubtitle();
-      
-      if (state.firebase && state.firebase.enabled) {
-        await syncWithFirebase();
-        normalizeCitiesData();
-      }
-      
-      render();
-      updateCloudBadge();
-      updateCloudInputs();
-      lucide.createIcons();
-
-      // Startup Splash Screen timer (exactly 3 seconds or immediate if disabled)
+      // 1. Independent Splash Screen timer (starts immediately)
       const splashDisabled = localStorage.getItem('chipaga_splash_disabled') === 'true';
       const delay = splashDisabled ? 0 : 3000;
       setTimeout(() => {
@@ -1524,6 +1505,35 @@
           }, splashDisabled ? 0 : 500);
         }
       }, delay);
+
+      // 2. Load Local Data & Render (instant visual load)
+      loadState();
+      translateUI();
+      normalizeCitiesData();
+      applyTheme();
+      initFirebase();
+      initEventListeners();
+      initLocks();
+      updateHeaderSubtitle();
+      
+      render();
+      updateCloudBadge();
+      updateCloudInputs();
+      lucide.createIcons();
+
+      // 3. Sync with Firebase in the background (asynchronous, non-blocking)
+      if (state.firebase && state.firebase.enabled) {
+        try {
+          await syncWithFirebase();
+          normalizeCitiesData();
+          render();
+          updateCloudBadge();
+          updateCloudInputs();
+          lucide.createIcons();
+        } catch (e) {
+          console.error("Errore nel sync in background:", e);
+        }
+      }
     });
 
     // --- ELAPSED TIME SUBTITLE ---
