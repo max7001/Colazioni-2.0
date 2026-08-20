@@ -84,7 +84,7 @@
   <header class="sticky top-0 z-40 w-full border-b border-orange-100/50 dark:border-zinc-900/50 bg-white/80 dark:bg-stone-900/80 backdrop-blur-md transition-colors duration-300">
     <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-coffee-600 to-orange-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+        <div id="headerLogoContainer" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-coffee-600 to-orange-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20 cursor-pointer active:scale-95 transition-transform" title="Tocca 3 volte per installare">
           <i data-lucide="coffee" class="w-5 h-5"></i>
         </div>
         <div>
@@ -863,6 +863,83 @@
       </div>
     </div>
   </div>
+  <!-- Startup Splash Screen (visible for 3 seconds) -->
+  <div id="splashScreen" class="fixed inset-0 z-[150] bg-stone-950 flex flex-col items-center justify-center transition-opacity duration-500 ease-out">
+    <div class="absolute inset-0 bg-gradient-to-br from-coffee-900/40 via-transparent to-orange-900/30 pointer-events-none"></div>
+    <div class="relative flex flex-col items-center gap-6 animate-pulse">
+      <img src="app_icon.jpg" alt="Logo" class="w-32 h-32 rounded-[2.5rem] border-4 border-white dark:border-zinc-800 shadow-2xl shadow-orange-500/25 object-cover">
+      <h1 class="text-3xl font-black text-white bg-gradient-to-r from-coffee-400 to-orange-400 bg-clip-text text-transparent">Chi paga?</h1>
+      <div class="flex items-center gap-1.5 mt-2">
+        <div class="w-2 h-2 rounded-full bg-orange-500 animate-bounce [animation-delay:-0.3s]"></div>
+        <div class="w-2 h-2 rounded-full bg-orange-500 animate-bounce [animation-delay:-0.15s]"></div>
+        <div class="w-2 h-2 rounded-full bg-orange-500 animate-bounce"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: PWA Installation Help -->
+  <div id="appInstallInstructionModal" class="fixed inset-0 z-[110] hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-stone-900 w-full max-w-sm rounded-3xl shadow-xl overflow-hidden transform scale-95 transition-all duration-200 border border-zinc-100 dark:border-zinc-800 p-6 flex flex-col gap-5">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <img src="app_icon.jpg" alt="Logo" class="w-10 h-10 rounded-xl object-cover shadow-sm flex-shrink-0">
+          <div>
+            <h4 class="text-sm font-bold text-zinc-900 dark:text-white">Installa "Chi paga?"</h4>
+            <p class="text-[10px] text-zinc-400">Crea una scorciatoia sulla schermata Home</p>
+          </div>
+        </div>
+        <button type="button" id="closeInstallModalBtn" class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Android Guide (hidden by default) -->
+      <div id="guideAndroid" class="hidden space-y-4">
+        <p class="text-xs text-zinc-650 dark:text-zinc-350 leading-relaxed">
+          Per creare l'icona sul tuo telefono Android:
+        </p>
+        <div class="space-y-2.5 text-xs text-zinc-700 dark:text-zinc-300">
+          <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">1</span>
+            <p>Tocca l'icona con i <b>tre puntini verticali</b> in alto a destra nel browser Chrome.</p>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">2</span>
+            <p>Seleziona l'opzione <b>"Installa app"</b> oppure <b>"Aggiungi a schermata Home"</b>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- iOS Guide (hidden by default) -->
+      <div id="guideiOS" class="hidden space-y-4">
+        <p class="text-xs text-zinc-650 dark:text-zinc-350 leading-relaxed">
+          Per creare l'icona sul tuo iPhone/iPad (Safari):
+        </p>
+        <div class="space-y-2.5 text-xs text-zinc-700 dark:text-zinc-300">
+          <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">1</span>
+            <p class="flex items-center gap-1.5 flex-wrap">
+              Tocca il pulsante di <b>Condivisione</b> in basso Safari 
+              <span class="inline-block p-1 rounded bg-zinc-100 dark:bg-zinc-800"><i data-lucide="share" class="w-3.5 h-3.5 text-blue-500"></i></span>.
+            </p>
+          </div>
+          <div class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 font-bold flex items-center justify-center flex-shrink-0 text-[10px]">2</span>
+            <p>Scorri l'elenco e seleziona <b>"Aggiungi alla schermata Home"</b>.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Button / Footer -->
+      <div class="flex justify-end gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800 flex-shrink-0">
+        <button type="button" id="closeInstallGuideBtn" class="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold transition-all active:scale-95 shadow-sm">
+          Ho capito
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="appLockModal" class="fixed inset-0 z-[100] bg-stone-950/95 backdrop-blur-md flex flex-col items-center justify-center p-6 gap-8">
     <div class="absolute inset-0 bg-gradient-to-br from-coffee-900/30 via-transparent to-orange-900/20 pointer-events-none"></div>
     <div class="relative flex flex-col items-center gap-6 w-full max-w-xs">
@@ -1324,6 +1401,23 @@
       updateCloudBadge();
       updateCloudInputs();
       lucide.createIcons();
+
+      // Startup Splash Screen timer (exactly 3 seconds)
+      setTimeout(() => {
+        const splash = document.getElementById("splashScreen");
+        if (splash) {
+          splash.classList.add("opacity-0");
+          setTimeout(() => {
+            splash.classList.add("hidden");
+            // Focus lock input if app is locked
+            const appLockModal = document.getElementById('appLockModal');
+            const appLockInput = document.getElementById('appLockInput');
+            if (appLockModal && !appLockModal.classList.contains('hidden') && appLockInput) {
+              appLockInput.focus();
+            }
+          }, 500);
+        }
+      }, 3000);
     });
 
     // --- ELAPSED TIME SUBTITLE ---
@@ -1387,7 +1481,6 @@
         appLockModal.classList.add('hidden');
       } else {
         appLockModal.classList.remove('hidden');
-        setTimeout(() => appLockInput.focus(), 300);
       }
 
       function tryAppUnlock() {
@@ -4052,9 +4145,88 @@
       lucide.createIcons();
     }
 
+    // --- PWA INSTALLATION PROCESS ---
+    let deferredPrompt = null;
+    let logoClickCount = 0;
+    let logoClickTimeout = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    function openInstallInstructionModal() {
+      const modal = document.getElementById("appInstallInstructionModal");
+      const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      
+      const guideAndroid = document.getElementById("guideAndroid");
+      const guideiOS = document.getElementById("guideiOS");
+
+      if (isiOS) {
+        if (guideiOS) guideiOS.classList.remove("hidden");
+        if (guideAndroid) guideAndroid.classList.add("hidden");
+      } else {
+        if (guideAndroid) guideAndroid.classList.remove("hidden");
+        if (guideiOS) guideiOS.classList.add("hidden");
+      }
+
+      if (modal) {
+        modal.classList.remove("hidden");
+        setTimeout(() => {
+          modal.querySelector('.transform').classList.remove('scale-95');
+          modal.querySelector('.transform').classList.add('scale-100');
+        }, 10);
+        lucide.createIcons();
+      }
+    }
+
+    function closeInstallInstructionModal() {
+      const modal = document.getElementById("appInstallInstructionModal");
+      if (modal) {
+        modal.querySelector('.transform').classList.remove('scale-100');
+        modal.querySelector('.transform').classList.add('scale-95');
+        setTimeout(() => {
+          modal.classList.add("hidden");
+        }, 200);
+      }
+    }
+
+    async function triggerAppInstallation() {
+      const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+      if (isiOS) {
+        openInstallInstructionModal();
+      } else {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`PWA install prompt outcome: ${outcome}`);
+          deferredPrompt = null;
+        } else {
+          openInstallInstructionModal();
+        }
+      }
+    }
+
+    function handleHeaderLogoClick() {
+      logoClickCount++;
+      if (logoClickTimeout) clearTimeout(logoClickTimeout);
+      
+      if (logoClickCount >= 3) {
+        logoClickCount = 0;
+        triggerAppInstallation();
+      } else {
+        logoClickTimeout = setTimeout(() => {
+          logoClickCount = 0;
+        }, 1500);
+      }
+    }
+
     // --- EVENT LISTENERS ---
     function initEventListeners() {
       document.getElementById("themeToggle").onclick = toggleTheme;
+      const logoBtn = document.getElementById("headerLogoContainer");
+      if (logoBtn) logoBtn.onclick = handleHeaderLogoClick;
       const csb = document.getElementById("cloudStatusBadge");
       if (csb) {
         csb.onclick = async () => {
@@ -4118,6 +4290,11 @@
       };
       document.getElementById("balancesInfoModal").onclick = (e) => {
         if (e.target.id === "balancesInfoModal") closeBalancesInfoModal();
+      };
+      document.getElementById("closeInstallModalBtn").onclick = closeInstallInstructionModal;
+      document.getElementById("closeInstallGuideBtn").onclick = closeInstallInstructionModal;
+      document.getElementById("appInstallInstructionModal").onclick = (e) => {
+        if (e.target.id === "appInstallInstructionModal") closeInstallInstructionModal();
       };
       document.getElementById("confirmModal").onclick = (e) => {
         if (e.target.id === "confirmModal") closeConfirmModal();
