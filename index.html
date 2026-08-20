@@ -561,6 +561,61 @@
     </div>
   </div>
 
+  <!-- User Settings Drawer / Modal (no password, local preferences) -->
+  <div id="normalSettingsModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-end">
+    <div class="bg-white dark:bg-stone-900 w-full max-w-sm h-full shadow-2xl flex flex-col border-l border-zinc-150 dark:border-zinc-800 transform translate-x-full transition-transform duration-300">
+      
+      <!-- Drawer Header -->
+      <div class="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-stone-900/50 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0">
+            <i data-lucide="sliders" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-zinc-900 dark:text-white">Impostazioni App</h3>
+            <p class="text-xs text-zinc-400">Preferenze di questo dispositivo</p>
+          </div>
+        </div>
+        <button id="closeNormalSettingsBtn" class="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Drawer Body -->
+      <div class="p-6 overflow-y-auto flex-1 custom-scrollbar space-y-6">
+        
+        <!-- Sound Settings section -->
+        <section class="space-y-4">
+          <h4 class="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Effetti Sonori</h4>
+          
+          <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800/50 gap-4">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="font-bold text-sm text-zinc-800 dark:text-white flex items-center gap-1.5">
+                <i data-lucide="volume-2" class="w-4 h-4 text-orange-500"></i>
+                Effetti Audio
+              </span>
+              <span class="text-xs text-zinc-400 dark:text-zinc-500 leading-normal">
+                Riproduci "Ei o pago!" alla conferma delle colazioni.
+              </span>
+            </div>
+            
+            <!-- Switch slider toggle -->
+            <button type="button" id="soundToggleBtn" class="w-10 h-6 rounded-full bg-emerald-500 relative transition-all duration-300 focus:outline-none flex-shrink-0">
+              <div id="soundToggleKnob" class="absolute w-4 h-4 rounded-full bg-white left-5 top-1 transition-all duration-300"></div>
+            </button>
+          </div>
+        </section>
+        
+        <!-- Information Section -->
+        <section class="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/20 dark:bg-stone-900/10 text-center">
+          <p class="text-[10px] text-zinc-400 leading-normal">
+            Le modifiche in questa schermata si applicano solo a questo telefono e non influenzano gli altri partecipanti.
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings Drawer / Modal -->
   <div id="settingsModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-end">
     <div class="bg-white dark:bg-stone-900 w-full max-w-md h-full shadow-2xl flex flex-col border-l border-zinc-100 dark:border-zinc-800 transform translate-x-full transition-transform duration-300">
@@ -1541,8 +1596,61 @@
       document.getElementById('settingsPinCancelBtn').onclick = closeSettingsPin;
       settingsPinInput.addEventListener('keydown', e => { if (e.key === 'Enter') trySettingsUnlock(); });
 
-      // Re-route settings button to PIN gate
-      document.getElementById('settingsBtn').onclick = openSettingsPin;
+      // Re-route settings button to PIN gate on 3s long press, or normal settings on simple tap
+      const settingsBtn = document.getElementById('settingsBtn');
+      if (settingsBtn) {
+        let settingsPressTimer = null;
+        let settingsPressTriggered = false;
+
+        const handleStart = (e) => {
+          settingsPressTriggered = false;
+          if (settingsPressTimer) clearTimeout(settingsPressTimer);
+          
+          settingsPressTimer = setTimeout(() => {
+            settingsPressTriggered = true;
+            if (navigator.vibrate) navigator.vibrate(80);
+            openSettingsPin();
+          }, 3000);
+        };
+
+        const handleEnd = (e) => {
+          if (settingsPressTimer) clearTimeout(settingsPressTimer);
+          settingsPressTimer = null;
+          
+          if (!settingsPressTriggered) {
+            if (e) e.preventDefault();
+            openNormalSettingsModal();
+          }
+        };
+
+        // Mouse events
+        settingsBtn.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          handleStart(e);
+        });
+        settingsBtn.addEventListener('mouseup', (e) => {
+          if (e.button !== 0) return;
+          handleEnd(e);
+        });
+        settingsBtn.addEventListener('mouseleave', () => {
+          if (settingsPressTimer) clearTimeout(settingsPressTimer);
+        });
+
+        // Touch events for mobile devices
+        settingsBtn.addEventListener('touchstart', (e) => {
+          e.stopPropagation();
+          handleStart(e);
+        }, { passive: false });
+        
+        settingsBtn.addEventListener('touchend', (e) => {
+          e.stopPropagation();
+          handleEnd(e);
+        }, { passive: false });
+        
+        settingsBtn.addEventListener('touchcancel', () => {
+          if (settingsPressTimer) clearTimeout(settingsPressTimer);
+        });
+      }
     }
 
     // --- LOCAL STORAGE ---
@@ -1856,6 +1964,8 @@
           return true;
         }
 
+        let needLocalUpload = false;
+
         // Map from Firestore documents to state
         if (!pSnapshot.empty) {
           const loadedParticipants = [];
@@ -1864,6 +1974,11 @@
             const pId = (p.id || doc.id || p.name || "").trim();
             const pName = (p.name || pId).trim();
             const localP = state.participants.find(lp => lp.id === pId || lp.name === pName);
+            
+            if (localP && localP.avatar && !p.avatar) {
+              needLocalUpload = true;
+            }
+
             loadedParticipants.push({
               id: pId,
               name: pName,
@@ -1916,6 +2031,12 @@
 
         syncBarRegistryWithBreakfasts();
         saveState();
+
+        if (needLocalUpload) {
+          console.log("Self-healing: caricamento degli avatar locali mancanti nel Cloud...");
+          await uploadLocalStateToFirebase();
+        }
+
         return true;
       } catch (e) {
         console.error("Errore nella sincronizzazione con Firebase", e);
@@ -3259,6 +3380,62 @@
       }, 200);
     }
 
+    function openNormalSettingsModal() {
+      const modal = document.getElementById("normalSettingsModal");
+      if (!modal) return;
+      modal.classList.remove("hidden");
+      updateNormalSettingsUI();
+      setTimeout(() => {
+        modal.querySelector('.transform').classList.remove('translate-x-full');
+        modal.querySelector('.transform').classList.add('translate-x-0');
+      }, 10);
+      lucide.createIcons();
+    }
+
+    function closeNormalSettingsModal() {
+      const modal = document.getElementById("normalSettingsModal");
+      if (!modal) return;
+      modal.querySelector('.transform').classList.remove('translate-x-0');
+      modal.querySelector('.transform').classList.add('translate-x-full');
+      setTimeout(() => {
+        modal.classList.add("hidden");
+      }, 200);
+    }
+
+    function updateNormalSettingsUI() {
+      const soundDisabled = localStorage.getItem('chipaga_sound_disabled') === 'true';
+      const btn = document.getElementById("soundToggleBtn");
+      const knob = document.getElementById("soundToggleKnob");
+      
+      if (btn && knob) {
+        if (!soundDisabled) {
+          btn.className = "w-10 h-6 rounded-full bg-emerald-500 relative transition-all duration-300 focus:outline-none flex-shrink-0";
+          knob.className = "absolute w-4 h-4 rounded-full bg-white left-5 top-1 transition-all duration-300";
+        } else {
+          btn.className = "w-10 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 relative transition-all duration-300 focus:outline-none flex-shrink-0";
+          knob.className = "absolute w-4 h-4 rounded-full bg-white left-1 top-1 transition-all duration-300";
+        }
+      }
+    }
+
+    function toggleSoundPreference() {
+      const current = localStorage.getItem('chipaga_sound_disabled') === 'true';
+      localStorage.setItem('chipaga_sound_disabled', (!current).toString());
+      updateNormalSettingsUI();
+      showToast(!current ? "Effetti sonori riabilitati!" : "Effetti sonori esclusi.", "info");
+    }
+
+    function playPaymentSound() {
+      const soundDisabled = localStorage.getItem('chipaga_sound_disabled') === 'true';
+      if (soundDisabled) return;
+      try {
+        const audio = new Audio("eiopago.mp3");
+        audio.play();
+      } catch (e) {
+        console.warn("Impossibile riprodurre l'audio:", e);
+      }
+    }
+
     function askConfirmation(title, message, callback) {
       const modal = document.getElementById("confirmModal");
       document.getElementById("confirmTitle").innerText = title;
@@ -4281,12 +4458,17 @@
       document.getElementById("guestNameInput").oninput = updateGuestCostBreakdown;
 
       document.getElementById("closeSettingsBtn").onclick = closeSettingsModal;
+      document.getElementById("closeNormalSettingsBtn").onclick = closeNormalSettingsModal;
+      document.getElementById("soundToggleBtn").onclick = toggleSoundPreference;
 
       document.getElementById("breakfastModal").onclick = (e) => {
         if (e.target.id === "breakfastModal") closeBreakfastModal();
       };
       document.getElementById("settingsModal").onclick = (e) => {
         if (e.target.id === "settingsModal") closeSettingsModal();
+      };
+      document.getElementById("normalSettingsModal").onclick = (e) => {
+        if (e.target.id === "normalSettingsModal") closeNormalSettingsModal();
       };
       document.getElementById("balancesInfoModal").onclick = (e) => {
         if (e.target.id === "balancesInfoModal") closeBalancesInfoModal();
@@ -4402,6 +4584,7 @@
           };
           state.breakfasts.push(updatedBreakfast);
           showToast(hasGuest ? `Colazione registrata con ospite ${guestName}!` : "Colazione registrata!");
+          playPaymentSound();
         }
 
         saveState();
