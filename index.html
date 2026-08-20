@@ -4770,7 +4770,8 @@
 
     // --- EVENT LISTENERS ---
     function initEventListeners() {
-      document.getElementById("themeToggle").onclick = toggleTheme;
+      const themeToggle = document.getElementById("themeToggle");
+      if (themeToggle) themeToggle.onclick = toggleTheme;
       const logoBtn = document.getElementById("headerLogoContainer");
       if (logoBtn) logoBtn.onclick = handleHeaderLogoClick;
       const csb = document.getElementById("cloudStatusBadge");
